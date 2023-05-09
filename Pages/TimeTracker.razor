@@ -1,0 +1,130 @@
+﻿@page "/timetracker"
+
+<!-- Header section -->
+<div class="sticky-top bg-white">
+    <br />
+
+    <div class="row px-2">
+
+        <!-- Left side -->
+        <div class="col-6">
+
+            <h3>Time Tracker</h3>
+
+            @switch (status)
+            {
+                // Update status label based on current status
+                case 0:
+                    <p>Status: Stopped</p>
+                    break;
+                case 1:
+                    <p>Status: Paused</p>
+                    break;
+                case 2:
+                    <p>Status: Running</p>
+                    break;
+            }
+
+        </div>
+
+        <!-- Right side -->
+        <div class="col-6">
+            <div class="btn-group float-end" role="group" aria-label="Basic example">
+
+                <button class="btn btn-success" @onclick="RecordStartEvent">Start</button>
+
+                <button class="btn btn-warning" @onclick="RecordPauseEvent">Pause</button>
+
+                <button class="btn btn-danger" @onclick="RecordStopEvent">Stop</button>
+
+            </div>
+        </div>
+    </div>
+   
+</div>
+
+<!-- Data table -->
+<div class="container">
+    <div class="row px-4">
+        <table class="table table-striped">
+            <thead class="thead-dark">
+
+                <tr>
+                    <th scope="col">Date & Time</th>
+                    <th scope="col">Status</th>
+                </tr>
+
+            </thead>
+            <tbody>
+
+                @foreach (var log in Logs.Reverse()) // Reverse the list so newest entries show at the top
+                {
+                    // Build a table of datetimes and
+                    <tr>
+                        <td>@log.Key</td>
+                        <td>@log.Value</td>
+                    </tr>
+                }
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@code {
+    private int status = 0; // 0 = Stopped, 1 = Paused, 2 = Running
+
+    private Dictionary<DateTime, String> Logs = new Dictionary<DateTime, String>();
+
+    private void RecordStartEvent()
+    {
+        // Prevent duplicate logs
+        if (status != 2)
+        {
+            // Set status to running
+            status = 2;
+
+            // Log the current date, time, and status using LogTime()
+            LogTime(DateTime.Now, "Start");
+        }
+
+    }
+
+    private void RecordPauseEvent()
+    {
+        // Prevent duplicate logs, only allow pausing when state is 'Running'
+        if (status == 2)
+        {
+            // Set status to paused
+            status = 1;
+
+            // Log the current date, time, and status using LogTime()
+            LogTime(DateTime.Now, "Pause");
+        }
+
+    }
+
+    private void RecordStopEvent()
+    {
+        // Prevent duplicate logs
+        if (status != 0)
+        {
+            // Set status to stopped
+            status = 0;
+
+            // Log the current date, time, and status using LogTime()
+            LogTime(DateTime.Now, "Stop");
+        }
+        
+    }
+
+    private void LogTime(DateTime loggedTime, string status)
+    {
+        // Add the requested time and status to the dictionary of logs
+        Logs.Add(loggedTime, status);
+
+        // TODO: Hand off to database, API, or service for remote logging
+        // Start with local storage via SQLite, move on to connectivity checks and remote database syncs
+    }
+}
